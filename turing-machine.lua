@@ -20,7 +20,7 @@ function init()
    ui_metro = metro.init(redraw, 1/10)
    ui_metro:start()
 
-   player = clock.run(play_notes)
+   player = clock.run(run_output)
 end
 
 function init_params()
@@ -29,11 +29,28 @@ function init_params()
    params:add_control('bias', "bias", controlspec.new(0.0, 1.0,'lin', 0.01, 0))
    params:add_control('scaling', "scaling", controlspec.new(0.0, 1.0,'lin', 0.01, 0.20))
 
-   params:add_separator("output")
+   params:add_separator("MIDI output")
    params:add_control('note_len', "note_len", controlspec.new(0.05, 1, 'lin', 0.01, 0.1, "sec"))
-   params:add_number('midi_dev', "MIDI dev", 1, 16, 1)
+   params:add_number('midi_dev', "dev", 1, 16, 1)
    params:set_action('midi_dev', function(d) midi_dev = midi.connect_output(d) end)
-   params:add_number('midi_ch', "MIDI channel", 1, 16, 1)
+   params:add_number('midi_ch', "channel", 1, 16, 1)
+   params:add_option('midi_type', "output", {"note", "cc"}, 1)
+   -- --  FIXME: Would toggle visibility... needs
+   -- --  _menu.rebuild_params() which I don't think
+   -- --  is implemented on seamstress
+   -- params:set_action('midi_type', function(d)
+   --                      if d == 1 then -- note
+   --                         params:hide('midi_cc')
+   --                         params:show('note_len')
+   --                      elseif d == 2 -- cc
+   --                         params:hide('note_len')
+   --                         params:show('midi_cc')
+   --                      end
+   --                     _menu:rebuild_params()
+   -- end)
+   -- params:add_control('midi_cc', "cc", controlspec.MIDI) -- Want integers tho
+   params:add_number('midi_cc', "cc", 1, 128, 71)
+   -- -- params:hide('midi_cc')
 
    params:bang()
 end
@@ -87,25 +104,36 @@ function redraw()
    screen.refresh()
 end
 
-function play_notes()
+function run_output()
    while true do
       clock.sync(1/4)
-      play_note()
+      if params:get('midi_type') == 1 then
+         play_note()
+      elseif params:get('midi_type') == 2 then
+         wiggle_cc()
+      end
    end
 end
 
 function play_note()
-   midi_dev:note_on(math.floor(register//2), 100, params:get('midi_ch'))
-      if midi_dev then
-      midi_dev:note_on(abs_note, abs_amp, params:get('midi_ch'))
+   if midi_dev then
+      note = math.floor(register >> 1) -- FIXME: MIDI is 7 bit
+      midi_dev:note_on(note, abs_amp, params:get('midi_ch'))
       -- note management routine from @dan_derks at
       -- https://llllllll.co/t/norns-midi-note-on-note-off-management/35905/5?u=xmacex
       clock.run(
          function()
             clock.sleep(params:get('note_len'))
-            midi_dev:note_off(abs_note, 0, params:get('midi_ch'))
+            midi_dev:note_off(note, 0, params:get('midi_ch'))
          end
       )
+   end
+end
+
+function wiggle_cc()
+   if midi_dev then
+      local val = math.floor(register >> 1) -- FIXME: MIDI is 7 bit
+      midi_dev:cc(params:get('midi_cc'), val, params:get('midi_ch'))
    end
 end
 
