@@ -12,15 +12,12 @@ midi_dev = nil
 
 function init()
    init_params()
-   metro.new()
 
-   turing_metro = metro.init(tick, 1/6)
-   turing_metro:start()
+   turing = clock.run(tick)
+   player = clock.run(run_output)
 
    ui_metro = metro.init(redraw, 1/10)
    ui_metro:start()
-
-   player = clock.run(run_output)
 end
 
 function init_params()
@@ -56,47 +53,44 @@ function init_params()
 end
 
 function tick()
-   -- mask = 1
-   -- -- Incrementing works
-   -- while (register&mask) ~= 0 do -- TODO: Can this be bitwise?
-   --    register = register&(~mask)
-   --    mask = mask << 1
-   -- end
-   -- if math.random() < params:get('p') then
-   --    register = register|mask
-   -- else
-   --    register = register|((mask<<1)&1)
-   -- end
+   while true do
+      clock.sync(1/4)
+      -- Grab the bit which is falling out.
+      output_mask = (1<<1)-1
+      output=register&output_mask
 
-   -- Grab the bit which is falling out.
-   output_mask = (1<<1)-1
-   output=register&output_mask
+      -- Maybe invert. Always inverting -> double the length repeating pattern.
+      if math.random() < params:get('p') then -- TODO: Which way is it on orig. TM?
+         output = output~1             -- is this legit bitwise?
+      end
 
-   -- Maybe invert. Always inverting -> double the length repeating pattern.
-   if math.random() < params:get('p') then -- TODO: Which way is it on orig. TM?
-      output = output~1             -- is this legit bitwise?
+      -- Place the output into the input, and truncate the bitstring at the end.
+      register=(register>>1)|(output<<(params:get('bits')-1))
+
+      -- Store in our nice table.
+      if #values > WIDTH then
+         table.remove(values, 1)
+      end
+      scaled_value = (2^params:get('bits') * params:get('offset'))
+         + register*params:get('scaling')
+      -- table.insert(values, (params:get('offset'))
+      --              +((2^params:get('bits'))*params:get('scaling'))) -- TODO: Scale at output maybe? No, these are historical values for drawing.
+      table.insert(values, scaled_value)
+      if DEBUG then
+         if register >= 2^params:get('bits') then register = 0 end
+      end
+      -- log(register..": "..numberToBinStr(register))
    end
-
-   -- Place the output into the input, and truncate the bitstring at the end.
-   register=(register>>1)|(output<<(params:get('bits')-1))
-
-   -- Store in our nice table.
-   if #values > WIDTH then
-      table.remove(values, 1)
-   end
-   scaled_value = (2^params:get('bits') * params:get('offset'))
-      + register*params:get('scaling')
-   -- table.insert(values, (params:get('offset'))
-   --              +((2^params:get('bits'))*params:get('scaling'))) -- TODO: Scale at output maybe? No, these are historical values for drawing.
-   table.insert(values, scaled_value)
-   if DEBUG then
-      if register >= 2^params:get('bits') then register = 0 end
-   end
-   -- log(register..": "..numberToBinStr(register))
 end
 
 function redraw()
    screen.clear()
+   draw_history()
+   draw_register()
+   screen.refresh()
+end
+
+function draw_history()
    screen.color(255, 255, 0)
    screen_scale = HEIGHT / (2^8)
    for i, val in pairs(values) do
@@ -105,7 +99,20 @@ function redraw()
          screen.line(i-1, HEIGHT-values[i-1])
       end
    end
-   screen.refresh()
+end
+
+function draw_register()
+   radius = 5
+   -- screen.move(WIDTH/2-radius*params:get('bits'), 10)
+   -- screen.text(register)
+   for i,v in ipairs(toBits(register, params:get('bits'))) do
+      screen.move(10 + i*radius*2 + i, 10)
+      if v == 0 then
+         screen.circle(radius)
+      else
+         screen.circle_fill(radius)
+      end
+   end
 end
 
 function run_output()
@@ -138,9 +145,9 @@ end
 
 function wiggle_cc()
    if midi_dev then
-       -- TODO: MIDI is 7 bit
+      -- TODO: MIDI is 7 bit
       local val = math.floor((2*params:get('bits')*params:get('offset'))
-                             +(register*params:get('scaling')))
+         +(register*params:get('scaling')))
       midi_dev:cc(params:get('midi_cc'), val, params:get('midi_ch'))
    end
 end
@@ -164,6 +171,18 @@ function log(s)
    if DEBUG then print(s) end
 end
 
+-- From https://stackoverflow.com/a/9080080
+function toBits(num,bits)
+   -- returns a table of bits, most significant first.
+   bits = bits or math.max(1, select(2, math.frexp(num)))
+   local t = {} -- will contain the bits
+   for b = bits, 1, -1 do
+      t[b] = math.fmod(num, 2)
+      num = math.floor((num - t[b]) / 2)
+   end
+   return t
+end
+
 -- Sketch area
 
 -- bits = 4
@@ -181,4 +200,16 @@ end
 --    register=(register>>1)|(o<<(bits-1))
 --    -- register = math.floor(register%(2^bits-1))
 --    print(numberToBinStr(register))
+-- end
+
+-- -- Incrementing works
+-- mask = 1
+-- while (register&mask) ~= 0 do -- TODO: Can this be bitwise?
+--    register = register&(~mask)
+--    mask = mask << 1
+-- end
+-- if math.random() < params:get('p') then
+--    register = register|mask
+-- else
+--    register = register|((mask<<1)&1)
 -- end
