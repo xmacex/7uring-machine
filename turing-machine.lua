@@ -26,11 +26,11 @@ end
 function init_params()
    params:add_number('bits', "bits", 1, 8, 8)
    params:add_control('p', "p", controlspec.new(0, 1.0,'lin', 0.01, 0.5))
-   params:add_control('bias', "bias", controlspec.new(0.0, 1.0,'lin', 0.01, 0))
+   params:add_control('offset', "offset", controlspec.new(0.0, 1.0,'lin', 0.01, 0))
    params:add_control('scaling', "scaling", controlspec.new(0.0, 1.0,'lin', 0.01, 0.20))
 
    params:add_separator("MIDI output")
-   params:add_control('note_len', "note_len", controlspec.new(0.05, 1, 'lin', 0.01, 0.1, "sec"))
+   params:add_control('note_len', "note length", controlspec.new(0.05, 1, 'lin', 0.01, 0.1, "sec"))
    params:add_number('midi_dev', "dev", 1, 16, 1)
    params:set_action('midi_dev', function(d) midi_dev = midi.connect_output(d) end)
    params:add_number('midi_ch', "channel", 1, 16, 1)
@@ -73,7 +73,7 @@ function tick()
    output=register&output_mask
 
    -- Maybe invert. Always inverting -> double the length repeating pattern.
-   if math.random() < params:get('p') then
+   if math.random() < params:get('p') then -- TODO: Which way is it on orig. TM?
       output = output~1             -- is this legit bitwise?
    end
 
@@ -84,7 +84,11 @@ function tick()
    if #values > WIDTH then
       table.remove(values, 1)
    end
-   table.insert(values, params:get('bias')+register*params:get('scaling'))
+   scaled_value = (2^params:get('bits') * params:get('offset'))
+      + register*params:get('scaling')
+   -- table.insert(values, (params:get('offset'))
+   --              +((2^params:get('bits'))*params:get('scaling'))) -- TODO: Scale at output maybe? No, these are historical values for drawing.
+   table.insert(values, scaled_value)
    if DEBUG then
       if register >= 2^params:get('bits') then register = 0 end
    end
@@ -94,8 +98,8 @@ end
 function redraw()
    screen.clear()
    screen.color(255, 255, 0)
+   screen_scale = HEIGHT / (2^8)
    for i, val in pairs(values) do
-      -- screen.pixel(i, HEIGHT-val)
       screen.move(i, HEIGHT-val)
       if i>2 then
          screen.line(i-1, HEIGHT-values[i-1])
@@ -117,7 +121,9 @@ end
 
 function play_note()
    if midi_dev then
-      note = math.floor(register >> 1) -- FIXME: MIDI is 7 bit
+      -- TODO: MIDI is 7 bit
+      note = math.floor(((2^params:get('bits'))*params:get('offset'))
+         + (register*params:get('scaling')))
       midi_dev:note_on(note, abs_amp, params:get('midi_ch'))
       -- note management routine from @dan_derks at
       -- https://llllllll.co/t/norns-midi-note-on-note-off-management/35905/5?u=xmacex
@@ -132,7 +138,9 @@ end
 
 function wiggle_cc()
    if midi_dev then
-      local val = math.floor(register >> 1) -- FIXME: MIDI is 7 bit
+       -- TODO: MIDI is 7 bit
+      local val = math.floor((2*params:get('bits')*params:get('offset'))
+                             +(register*params:get('scaling')))
       midi_dev:cc(params:get('midi_cc'), val, params:get('midi_ch'))
    end
 end
@@ -155,7 +163,6 @@ end
 function log(s)
    if DEBUG then print(s) end
 end
-
 
 -- Sketch area
 
