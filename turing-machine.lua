@@ -6,7 +6,10 @@ WIDTH = 256
 HEIGHT = 128
 
 values = {0,0}
+TAB_WIDTH = WIDTH/2
 register = 0
+pulse_high = 0
+pulse_note = nil
 
 midi_dev = nil
 
@@ -27,11 +30,7 @@ function init_params()
    params:add_control('scaling', "scaling", controlspec.new(0.0, 1.0,'lin', 0.01, 0.20))
 
    params:add_separator("MIDI output")
-   params:add_control('note_len', "note length", controlspec.new(0.05, 1, 'lin', 0.01, 0.1, "sec"))
-   params:add_number('midi_dev', "dev", 1, 16, 1)
-   params:set_action('midi_dev', function(d) midi_dev = midi.connect_output(d) end)
-   params:add_number('midi_ch', "channel", 1, 16, 1)
-   params:add_option('midi_type', "output", {"note", "cc"}, 1)
+   params:add_option('midi_type', "output", {"note", "pulse note", "cc"}, 1)
    -- --  FIXME: Would toggle visibility... needs
    -- --  _menu.rebuild_params() which I don't think
    -- --  is implemented on seamstress
@@ -39,13 +38,22 @@ function init_params()
    --                      if d == 1 then -- note
    --                         params:hide('midi_cc')
    --                         params:show('note_len')
-   --                      elseif d == 2 -- cc
+   --                      elseif d == 2 -- pulse
+   --                         params:hide('midi_cc')
+   --                         params:hide('note_length')
+   --                      elseif d == 3 -- cc
    --                         params:hide('note_len')
    --                         params:show('midi_cc')
    --                      end
    --                     _menu:rebuild_params()
    -- end)
    -- params:add_control('midi_cc', "cc", controlspec.MIDI) -- Want integers tho
+   params:add_number('midi_dev', "dev", 1, 16, 1)
+   params:set_action('midi_dev', function(d) midi_dev = midi.connect_output(d) end)
+   params:add_number('midi_ch', "channel", 1, 16, 1)
+
+   params:add_control('note_len', "note length", controlspec.new(0.05, 1, 'lin', 0.01, 0.1, "sec"))
+   -- -- params:hide('midi_cc')
    params:add_number('midi_cc', "cc", 1, 128, 71)
    -- -- params:hide('midi_cc')
 
@@ -68,7 +76,7 @@ function tick()
       register=(register>>1)|(output<<(params:get('bits')-1))
 
       -- Store in our nice table.
-      if #values > WIDTH then
+      if #values > TAB_WIDTH then
          table.remove(values, 1)
       end
       scaled_value = (2^params:get('bits') * params:get('offset'))
@@ -80,6 +88,14 @@ function tick()
          if register >= 2^params:get('bits') then register = 0 end
       end
       -- log(register..": "..numberToBinStr(register))
+
+      -- Pulse
+      if output==1 and pulse_high==0 then -- Pulse came up
+         pulse_on()
+      elseif output==0 and pulse_high==1 then     -- Pulse came down
+         pulse_off()
+      end
+      pulse_high = output
    end
 end
 
@@ -121,6 +137,8 @@ function run_output()
       if params:get('midi_type') == 1 then
          play_note()
       elseif params:get('midi_type') == 2 then
+         -- pulse() -- This is done event-based lol
+      elseif params:get('midi_type') == 3 then
          wiggle_cc()
       end
    end
@@ -142,6 +160,19 @@ function play_note()
       )
    end
 end
+
+function pulse_on()
+   pulse_note = math.floor(((2^params:get('bits'))*params:get('offset'))
+      + (register*params:get('scaling')))
+   midi_dev:note_on(pulse_note, 100, params:get('midi_ch'))
+   -- log("Pulse "..pulse_note.." on")
+end
+
+function pulse_off()
+   midi_dev:note_off(pulse_note, 0, params:get('midi_ch'))
+   -- log("Pulse "..pulse_note.." off")
+end
+
 
 function wiggle_cc()
    if midi_dev then
