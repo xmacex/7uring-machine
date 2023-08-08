@@ -41,11 +41,6 @@ stds.seamstress = {
       "init",
    },
    read_globals = {
-      "ipairs",
-      "pairs",
-      "print",
-      "select",
-      "tostring",
       clock = {
          fields = {
             "run",
@@ -59,27 +54,17 @@ stds.seamstress = {
             "MIDI"
          }
       },
+      metro = {
+         fields = {
+            "init"
+         }
+      },
       midi = {
          fields = {
             "cc",
             "connect_output",
             "note_on",
             "note_off"
-         }
-      },
-      math = {
-         fields = {
-            "floor",
-            "fmod",
-            "frexp",
-            "max",
-            "modf",
-            "random"
-         }
-      },
-      metro = {
-         fields = {
-            "init"
          }
       },
       params = {
@@ -106,14 +91,8 @@ stds.seamstress = {
             "move",
             "refresh"
          }
-      },
-      table = {
-         fields = {
-            "insert",
-            "remove"
-         }
       }
    }
 }
 
-std = "min+seamstress+turingmachine"
+std = "lua54+seamstress+turingmachine"
