@@ -2,16 +2,16 @@
 
 DEBUG = true
 
-WIDTH = 256
-HEIGHT = 128
+local WIDTH = 256
+local HEIGHT = 128
 
-values = {0,0}
-TAB_WIDTH = WIDTH/2
-register = 0
-pulse_high = 0
-pulse_note = nil
+local values = {0,0}
+local TAB_WIDTH = WIDTH/2
+local register = 0
+local pulse_high = 0
+local pulse_note = nil
 
-midi_dev = nil
+local midi_dev = nil
 
 function init()
    init_params()
@@ -64,8 +64,8 @@ function tick()
    while true do
       clock.sync(1/4)
       -- Grab the bit which is falling out.
-      output_mask = (1<<1)-1
-      output=register&output_mask
+      local output_mask = (1<<1)-1
+      local output=register&output_mask
 
       -- Maybe invert. Always inverting -> double the length repeating pattern.
       if math.random() < params:get('p') then -- TODO: Which way is it on orig. TM?
@@ -79,7 +79,7 @@ function tick()
       if #values > TAB_WIDTH then
          table.remove(values, 1)
       end
-      scaled_value = (2^params:get('bits') * params:get('offset'))
+      local scaled_value = (2^params:get('bits') * params:get('offset'))
          + register*params:get('scaling')
       -- table.insert(values, (params:get('offset'))
       --              +((2^params:get('bits'))*params:get('scaling'))) -- TODO: Scale at output maybe? No, these are historical values for drawing.
@@ -108,7 +108,6 @@ end
 
 function draw_history()
    screen.color(255, 255, 0)
-   screen_scale = HEIGHT / (2^8)
    for i, val in pairs(values) do
       screen.move(i, HEIGHT-val)
       if i>2 then
@@ -118,7 +117,7 @@ function draw_history()
 end
 
 function draw_register()
-   radius = 5
+   local radius = 5
    -- screen.move(WIDTH/2-radius*params:get('bits'), 10)
    -- screen.text(register)
    for i,v in ipairs(toBits(register, params:get('bits'))) do
@@ -147,9 +146,9 @@ end
 function play_note()
    if midi_dev then
       -- TODO: MIDI is 7 bit
-      note = math.floor(((2^params:get('bits'))*params:get('offset'))
+      local note = math.floor(((2^params:get('bits'))*params:get('offset'))
          + (register*params:get('scaling')))
-      midi_dev:note_on(note, abs_amp, params:get('midi_ch'))
+      midi_dev:note_on(note, 100, params:get('midi_ch'))
       -- note management routine from @dan_derks at
       -- https://llllllll.co/t/norns-midi-note-on-note-off-management/35905/5?u=xmacex
       clock.run(
@@ -173,7 +172,6 @@ function pulse_off()
    -- log("Pulse "..pulse_note.." off")
 end
 
-
 function wiggle_cc()
    if midi_dev then
       -- TODO: MIDI is 7 bit
@@ -185,7 +183,7 @@ end
 
 -- https://gist.github.com/lexnewgate/28663fecae78324a87f38aa9c2e0a293
 function numberToBinStr(x)
-   ret=""
+   local ret=""
    while x~=1 and x~=0 do
       ret=tostring(x%2)..ret
       x=math.modf(x/2)
