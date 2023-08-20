@@ -36,7 +36,7 @@ stds.turingmachine = {
    }
 }
 
-stds.seamstress = {
+stds.norns = {
    globals = {
       "init",
    },
@@ -62,7 +62,7 @@ stds.seamstress = {
       midi = {
          fields = {
             "cc",
-            "connect_output",
+            "connect",
             "note_on",
             "note_off"
          }
@@ -84,15 +84,14 @@ stds.seamstress = {
       screen = {
          fields = {
             "circle",
-            "circle_fill",
             "clear",
             "color",
             "line",
             "move",
-            "refresh"
+            "update"
          }
       }
    }
 }
 
-std = "lua54+seamstress+turingmachine"
+std = "lua54+norns+turingmachine"
