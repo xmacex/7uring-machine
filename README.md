@@ -1,6 +1,6 @@
 # turing-machine
 
-A Turing machine generative sequencer thing. Written for [seamstress](https://llllllll.co/t/seamstress-v0-15-1/62356) while I'm away from my norns.
+A Turing machine generative sequencer thing.
 
 ![SN74HC163N](img/sn74hc163n-dithering.gif)
 
@@ -10,7 +10,6 @@ The idea (for myself) is to build the shift register using bitwise operations on
 
 ## Roadmap
 
-  * [ ] Port to norns
   * [ ] `0` and `1` input
   * [ ] What to do with pulse? Gate is fun too
   * [ ] Improve everything
