@@ -159,6 +159,8 @@ end
 function enc(n, d)
    if n == 1 then
       params:delta('p', d)
+   elseif n == 2 then
+      params:delta('bits', d)
    end
 end
 
