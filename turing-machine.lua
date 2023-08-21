@@ -150,13 +150,14 @@ function draw_register()
 end
 
 function draw_controls()
-  screen.level(8)
-  p_dial:redraw()
-  if norns.is_shield then
-     screen.move(0, HEIGHT)
-     screen.text(0)
-     screen.move(28, HEIGHT)
-     screen.text(1)
+   screen.font_face(1<<4)
+   screen.level(8)
+   p_dial:redraw()
+   if norns.is_shield then
+      screen.move(0, HEIGHT)
+      screen.text(0)
+      screen.move(28, HEIGHT)
+      screen.text(1)
   end
 end
 
