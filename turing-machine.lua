@@ -20,8 +20,8 @@ register = 0
 local pulse_high = 0
 local pulse_note = nil
 
-local p_dial       = ui.Dial.new(
-   0, HEIGHT/2, 20,
+local p_dial = ui.Dial.new(
+   0, HEIGHT/2-10, 20,
    0.5, 0, 1,
    0.01, 0.5, {}, "", "p")
 
@@ -152,6 +152,12 @@ end
 function draw_controls()
   screen.level(8)
   p_dial:redraw()
+  if norns.is_shield then
+     screen.move(0, HEIGHT)
+     screen.text(0)
+     screen.move(28, HEIGHT)
+     screen.text(1)
+  end
 end
 
 -- Interactions. TODO split to files/libs
@@ -161,6 +167,16 @@ function enc(n, d)
       params:delta('p', d)
    elseif n == 2 then
       params:delta('bits', d)
+   end
+end
+
+function key(n, z)
+   if n == 2 and z == 1 then
+      -- Set MSB as 0
+      register = register>>1
+   elseif n == 3 and z == 1 then
+      -- Set MSB as 1
+      register = register|(1<<params:get('bits'))
    end
 end
 
