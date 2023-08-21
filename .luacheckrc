@@ -8,6 +8,7 @@ stds.turingmachine = {
       "init_params",
       "tick",
       "redraw",
+      "draw_controls",
       "draw_history",
       "draw_register",
       "run_output",
@@ -15,6 +16,7 @@ stds.turingmachine = {
       "pulse_on",
       "pulse_off",
       "wiggle_cc",
+
       -- Utility functions
       "numberToBinStr",
       "boolToNumber",
@@ -39,8 +41,14 @@ stds.turingmachine = {
 stds.norns = {
    globals = {
       "init",
+      "enc"
    },
    read_globals = {
+      _menu = {
+         fields = {
+            "rebuild_params"
+         }
+      },
       clock = {
          fields = {
             "run",
@@ -51,7 +59,8 @@ stds.norns = {
       controlspec = {
          fields = {
             "new",
-            "MIDI"
+            "MIDI",
+            "MIDINOTE"
          }
       },
       metro = {
@@ -74,6 +83,7 @@ stds.norns = {
             "add_option",
             "add_separator",
             "bang",
+            "delta",
             "hide",
             "get",
             "set",
@@ -86,12 +96,22 @@ stds.norns = {
             "circle",
             "clear",
             "color",
+            "fill",
+            "level",
             "line",
             "move",
-            "update"
+            "update",
+            "stroke"
+         }
+      },
+      ui = {
+         Dial = {
+            fields = {
+               "new"
+            }
          }
       }
    }
 }
 
-std = "lua54+norns+turingmachine"
+std = "lua51+norns+turingmachine"
