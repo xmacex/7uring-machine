@@ -16,13 +16,22 @@ else
   local values = {0,0}
 end
 local TAB_WIDTH = WIDTH/8
-local register = 0
+register = 0
 local pulse_high = 0
 local pulse_note = nil
 
--- UI.Dial.new (x, y, size, value, min_value, max_value, rounding, start_value, markers, units, title)
-p_dial       = ui.Dial.new(0, HEIGHT/2, 20, 0.5, 0, 1, 0.01, 0.5, {}, "", "p")
-scaling_dial = ui.Dial.new(p_dial.x + p_dial.size+5, p_dial.y+p_dial.size/2, 10, 0.2, 0, 1, 0.01, 1, {}, "", "s")
+local p_dial       = ui.Dial.new(
+   0, HEIGHT/2, 20,
+   0.5, 0, 1,
+   0.01, 0.5, {}, "", "p")
+local offset_dial  = ui.Dial.new(
+   p_dial.x + p_dial.size+5, p_dial.y-p_dial.size/2, 10,
+   controlspec.MIDINOTE.default/2, controlspec.MIDINOTE.minval, controlspec.MIDINOTE.maxval,
+   1, 1, {}, "", "o")
+local scaling_dial = ui.Dial.new(
+   p_dial.x + p_dial.size+5, p_dial.y+p_dial.size/2, 10,
+   0.2, 0, 1,
+   0.01, 1, {}, "", "s")
 
 local midi_dev = nil
 
@@ -46,7 +55,8 @@ function init_params()
    params:add_number('bits', "bits", 1, 8, 8)
    params:add_control('p', "p", controlspec.new(0, 1.0,'lin', 0.01, 0.5))
    params:set_action('p', function(p) p_dial:set_value(p) end)
-   params:add_control('offset', "offset", controlspec.new(0.0, 1.0,'lin', 0.01, 0))
+   params:add_control('offset', "offset", controlspec.MIDINOTE)
+   params:set_action('offset', function(p) offset_dial:set_value(p) end)
    params:add_control('scaling', "scaling", controlspec.new(0.0, 1.0,'lin', 0.01, 0.20))
    params:set_action('scaling', function(p) scaling_dial:set_value(p) end)
 
@@ -85,7 +95,7 @@ function tick()
       local output=register&output_mask
 
       -- Maybe invert. Always inverting -> double the length repeating pattern.
-      if math.random() < params:get('p') then -- TODO: Which way is it on orig. TM?
+      if math.random() > params:get('p') then -- TODO: Which way is it on orig. TM?
          output = output~1             -- is this legit bitwise?
       end
 
@@ -96,10 +106,16 @@ function tick()
       if #values > TAB_WIDTH then
          table.remove(values, 1)
       end
-      local scaled_value = (2^params:get('bits') * params:get('offset'))
-         + register*params:get('scaling')
+      -- local scaled_value = (2^params:get('bits') * params:get('offset'))
       -- table.insert(values, (params:get('offset'))
       --              +((2^params:get('bits'))*params:get('scaling'))) -- TODO: Scale at output maybe? No, these are historical values for drawing.
+      -- local scaled_value = params:get('offset') + (2^params:get('bits'))
+      --    + register*params:get('scaling')
+
+      scaled_value = params:get('offset') -- 0-128
+         -- + (2^params:get('bits'))         -- 0-256
+         + register*params:get('scaling') -- 0-256
+
       table.insert(values, scaled_value)
       if DEBUG then
          if register >= 2^params:get('bits') then register = 0 end
@@ -126,15 +142,17 @@ end
 
 function draw_history()
    local xres=WIDTH/TAB_WIDTH
-   local yres=HEIGHT/128
+   local yres=HEIGHT/640
    screen.level(1)
    for i, val in pairs(values) do
       -- Let's use bitwise operations for screen drawing too.
-      screen.move(i*xres, (HEIGHT-(math.floor(val)>>2)))
+      -- screen.move(i*xres, (HEIGHT-(math.floor(val)>>2)))
+      screen.move(i*xres, HEIGHT-(math.floor(val)>>2))
       if i>2 then
          -- screen.line(i, HEIGHT-val, i-1, HEIGHT-values[i-1])
-	       -- screen.line((i-1)*xres, (HEIGHT-values[i-1])*yres)
-	       screen.line((i-1)*xres, (HEIGHT-(math.floor(values[i-1])>>2)))
+         -- screen.line((i-1)*xres, (HEIGHT-values[i-1])*yres)
+         -- screen.line((i-1)*xres, (HEIGHT-(math.floor(values[i-1])>>2)))
+         screen.line((i-1)*xres, HEIGHT-(math.floor(values[i-1])>>2))
       end
    end
    screen.stroke()
@@ -162,17 +180,18 @@ end
 function draw_controls()
   screen.level(8)
   p_dial:redraw()
+  offset_dial:redraw()
   scaling_dial:redraw()
 end
 
 -- Interactions. TODO split to files/libs
 
 function enc(n, d)
-   if n == 2 then
-      local old_p = params:get('p')
+   if n == 1 then
       params:delta('p', d)
+   elseif n == 2 then
+      params:delta('offset', d)
    elseif n == 3 then
-      local old_p = params:get('scaling')
       params:delta('scaling', d)
    end
 end
