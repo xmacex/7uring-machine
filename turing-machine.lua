@@ -134,8 +134,6 @@ end
 
 function draw_register()
    local radius = 3
-   -- screen.move(WIDTH/2-radius*params:get('bits'), 10)
-   -- screen.text(register)
    screen.level(8)
    for i,v in ipairs(toBits(register, params:get('bits'))) do
       -- screen.move(10 + i*radius*2 + i, 10)
