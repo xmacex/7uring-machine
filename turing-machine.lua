@@ -1,5 +1,4 @@
 -- Turing machine.
--- The norns version.
 --
 -- xmacex
 
@@ -47,13 +46,14 @@ function init_params()
    params:add_number('bits', "bits", 1, 7, 7)
    params:add_control('p', "p", controlspec.new(0, 1.0,'lin', 0.01, 0.5))
    params:set_action('p', function(p) p_dial:set_value(p) end)
+   params:add_number('offset', "offset mask", 0, 6, 0)
 
    params:add_separator("MIDI output")
-   params:add_option('midi_type', "output", {"note", "pulse note", "cc"}, 1)
    params:add_control('midi_cc', "cc", controlspec.MIDI) -- Want integers tho
    params:add_number('midi_dev', "dev", 1, 16, 1)
    params:set_action('midi_dev', function(d) midi_dev = midi.connect(d) end)
    params:add_number('midi_ch', "channel", 1, 16, 1)
+   params:add_option('midi_type', "output", {"note", "pulse note", "cc"}, 1)
    params:add_control('note_len', "note length", controlspec.new(0.05, 1, 'lin', 0.01, 0.1, "sec"))
    params:hide('midi_cc')
    params:add_number('midi_cc', "cc", 1, 128, 71)
@@ -91,15 +91,16 @@ function tick()
       register=(register>>1)|(output<<(params:get('bits')-1))
 
       -- Store in our nice table.
-      if #values > TAB_WIDTH then
+      local offset_value = register + (1<<params:get('offset'))-1 -- TODO: bitwise
+
+      if #values >= TAB_WIDTH then
          table.remove(values, 1)
       end
+      table.insert(values, offset_value)
 
-      table.insert(values, register)
-      if DEBUG then
+      if DEBUG then             -- Erm why is this inside debug?
          if register >= 2^params:get('bits') then register = 0 end
       end
-      -- log(register..": "..numberToBinStr(register))
 
       -- Pulse
       if output==1 and pulse_high==0 then -- Pulse came up
@@ -115,6 +116,7 @@ function redraw()
    screen.clear()
    draw_history()
    draw_register()
+   draw_offset()
    draw_controls()
    screen.update()
 end
@@ -134,11 +136,33 @@ end
 
 function draw_register()
    local radius = 3
-   screen.level(8)
-   for i,v in ipairs(toBits(register, params:get('bits'))) do
+   -- for i,v in ipairs(toBits(register, params:get('bits'))) do
+   for i,v in ipairs(toBits(register, 7)) do
       -- screen.move(10 + i*radius*2 + i, 10)
       local x = 10+i*radius*2+i
       local y = 10
+      if 7-i < params:get('bits') then
+         screen.level(8)
+      else
+         screen.level(1)
+      end
+
+      if v == 0 then
+	 screen.circle(x, y, radius)
+	 screen.stroke()
+      else
+	 screen.circle(x, y, radius)
+	 screen.fill()
+      end
+   end
+end
+
+function draw_offset()
+   local radius = 3
+   screen.level(8)
+   for i,v in ipairs(toBits(1<<params:get('offset')-1, 7)) do
+      local x = 10+i*radius*2+i
+      local y = 20
       if v == 0 then
 	 screen.circle(x, y, radius)
 	 screen.stroke()
@@ -168,6 +192,8 @@ function enc(n, d)
       params:delta('p', d)
    elseif n == 2 then
       params:delta('bits', d)
+   elseif n == 3 then
+      params:delta('offset', d)
    end
 end
 
@@ -199,7 +225,7 @@ end
 function play_note()
    if midi_dev then
       -- TODO: MIDI is 7 bit
-      local note = register
+      local note = get_offset_register()
       midi_dev:note_on(note, 100, params:get('midi_ch'))
       -- note management routine from @dan_derks at
       -- https://llllllll.co/t/norns-midi-note-on-note-off-management/35905/5?u=xmacex
@@ -213,7 +239,7 @@ function play_note()
 end
 
 function pulse_on()
-   local pulse_note = register
+   local pulse_note = get_offset_register()
    midi_dev:note_on(pulse_note, 100, params:get('midi_ch'))
    -- log("Pulse "..pulse_note.." on")
 end
@@ -226,9 +252,15 @@ end
 function wiggle_cc()
    if midi_dev then
       -- TODO: MIDI is 7 bit. Deal with it.
-      local val = register
+      local val = get_offset_register()
       midi_dev:cc(params:get('midi_cc'), val, params:get('midi_ch'))
    end
+end
+
+-- Get the register will offset etc. shenanigans applied
+function get_offset_register()
+   local value = register + (1<<params:get('offset'))-1 -- TODO: bitwise
+   return value
 end
 
 -- https://gist.github.com/lexnewgate/28663fecae78324a87f38aa9c2e0a293
