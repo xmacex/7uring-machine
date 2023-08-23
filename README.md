@@ -1,16 +1,42 @@
-# turing-machine
+# Turing Machine
 
-A Turing machine generative sequencer thing.
+A Turing Machine generative sequencer thing. For norns.
 
 ![SN74HC163N](img/sn74hc163n-dithering.gif)
 
-The idea (for myself) is to build the shift register using bitwise operations only. Thank you to Sound + Voltage for explaining how the thing works on the video [*Turing 201: Turing Machine Explained (More than you ever needed to know...)*](https://www.youtube.com/watch?v=va2XAdFtmeU).
+This is a Turing Machine shift register sequencer, a 7-bit norns implementation of the Turing Machine Eurorack module... more-or-less. This is aimed at MIDI, which is 7-bit with values ranging from 0 to 127. The `p` parameter sets how likely the bit falling out will be inverted before it goes back in the other end. At 0.5 it's uniformly random. At the max value 1 it is never inverted meaning the sequence will loop. At minimum value 0 the bit is always inverted, meaning the loop will be twice as long. Lock the `p` to 1 or 0 catch the sequence and loop it.
+
+The additional parameters define how many bits the shift register contains, and an offset which is added to the register value. The former influences the range of generated sequence, the latter pushes it higher. Everything is exponential in the 0, 1, 2, 4, 8, 16, 32, 64, 128... sequence, because that's how bitshifting kind of works.
+
+## Requirements
+
+- norns
+- MIDI device
+
+## Install
+
+```
+;install https://github.com/xmacex/turing-machine
+```
+
+Might get it in the catalog later.
+
+## Credits
+
+- I think Music Thing Modular made the original ![Turing Machine](https://github.com/TomWhitwell/TuringMachine) an Eurorack module.
+- Sound + Voltage for explained to me how the thing works on the video [*Turing 201: Turing Machine Explained (More than you ever needed to know...)*](https://www.youtube.com/watch?v=va2XAdFtmeU).
+- Alan Turing for everything
 
 ![Sir Alan Turing in Manchester 2018](img/alan_dithering.gif)
 
 ## Roadmap
 
-  * [ ] `0` and `1` input
-  * [ ] What to do with pulse? Gate is fun too
+  * [x] `0` and `1` input
+  * [x] Offset
+  * [ ] Scaling or is it too normcore?
+  * [ ] ![n.b.](https://llllllll.co/t/n-b-et-al-v0-1/60374/) output maybe
+  * [ ] Maybe make the UI less obvious
+  * [ ] What to do with pulse?
+  * [ ] Gates are kind of fun too
   * [ ] Improve everything
-  * [ ] Extensions
+  * [ ] Extensions maybe
