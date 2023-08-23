@@ -7,20 +7,16 @@
 -- By xmacex, Tom Whitwell's
 -- successful TM concept.
 
-DEBUG = true
+DEBUG = false
 
 ui = require "ui"
 
 local WIDTH = 128
 local HEIGHT = 64
 
-if DEBUG then
-  values = {0,0}
-else
-  local values = {0,0}
-end
+local values = {0,0}
 local TAB_WIDTH = WIDTH/8
-register = 0
+local register = 0
 local pulse_high = 0
 local pulse_note = nil
 
@@ -80,6 +76,8 @@ function init_params()
    params:bang()
 end
 
+-- Shift register
+
 function tick()
    while true do
       clock.sync(1/4)
@@ -108,14 +106,24 @@ function tick()
       end
 
       -- Pulse
-      if output==1 and pulse_high==0 then -- Pulse came up
+      if output == 1 and pulse_high == 0 then -- Pulse came up
          pulse_on()
-      elseif output==0 and pulse_high==1 then     -- Pulse came down
+      elseif output == 0 and pulse_high == 1 then -- Pulse came down
          pulse_off()
       end
       pulse_high = output
    end
 end
+
+-- Get the register will offset etc. shenanigans applied
+function get_offset_register()
+   local value = register + (1<<params:get('offset'))-1 -- TODO: bitwise
+   return value
+end
+
+-- End of shift register
+
+-- Screen drawing
 
 function redraw()
    screen.clear()
@@ -128,7 +136,9 @@ end
 
 function draw_history()
    local xres=WIDTH/TAB_WIDTH
-   screen.level(1)
+   screen.line_width(6)
+   screen.line_cap("round")
+   screen.level(3)
    for i, val in pairs(values) do
       -- Let's use bitwise operations for screen drawing too.
       screen.move(i*xres, HEIGHT-(val>>1))
@@ -137,6 +147,7 @@ function draw_history()
       end
    end
    screen.stroke()
+   screen.line_width(1)
 end
 
 function draw_register()
@@ -190,6 +201,8 @@ function draw_controls()
   end
 end
 
+-- End of drawing functions
+
 -- Interactions. TODO split to files/libs
 
 function enc(n, d)
@@ -212,7 +225,9 @@ function key(n, z)
    end
 end
 
--- End of interactions
+-- End of screen drawing
+
+-- Output
 
 function run_output()
    while true do
@@ -262,13 +277,19 @@ function wiggle_cc()
    end
 end
 
--- Get the register will offset etc. shenanigans applied
-function get_offset_register()
-   local value = register + (1<<params:get('offset'))-1 -- TODO: bitwise
-   return value
+-- End of output
+
+-- Utilities
+
+function boolToNumber(value)
+   return value and 1 or 0
 end
 
--- https://gist.github.com/lexnewgate/28663fecae78324a87f38aa9c2e0a293
+function log(s)
+   if DEBUG then print(s) end
+end
+
+-- From https://gist.github.com/lexnewgate/28663fecae78324a87f38aa9c2e0a293
 function numberToBinStr(x)
    local ret=""
    while x~=1 and x~=0 do
@@ -277,14 +298,6 @@ function numberToBinStr(x)
    end
    ret=tostring(x)..ret
    return ret
-end
-
-function boolToNumber(value)
-   return value and 1 or 0
-end
-
-function log(s)
-   if DEBUG then print(s) end
 end
 
 -- From https://stackoverflow.com/a/9080080
@@ -298,6 +311,8 @@ function toBits(num,bits)
    end
    return t
 end
+
+-- End of utilities
 
 -- Sketch area
 
@@ -329,3 +344,4 @@ end
 -- else
 --    register = register|((mask<<1)&1)
 -- end
+-- End of sketch ares

@@ -2,7 +2,7 @@
 
 A generative sequencer thing. For norns.
 
-![SN74HC163N](img/sn74hc163n-dithering.gif)
+![SN74HC163N](lib/sn74hc163n-dithering.gif)
 
 This is a shift register sequencer, a 7-bit norns implementation of the Turing Machine Eurorack module... more-or-less. This is aimed at MIDI, which is 7-bit with values ranging from 0 to 127.
 
@@ -31,7 +31,7 @@ For the time being, install with
 - Sound + Voltage for explained to me how the thing works on the video [*Turing 201: Turing Machine Explained (More than you ever needed to know...)*](https://www.youtube.com/watch?v=va2XAdFtmeU).
 - Alan Turing for everything
 
-![Sir Alan Turing in Manchester 2018](img/alan_dithering.gif)
+![Sir Alan Turing in Manchester 2018](lib/alan_dithering.gif)
 
 ## Roadmap
 
