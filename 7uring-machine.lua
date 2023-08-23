@@ -1,6 +1,11 @@
--- Turing machine.
+-- 7 bit turing machine.
 --
--- xmacex
+-- E1 for p
+-- E2 adjust bits, E3 offset
+-- K2 write a 0, K3 a 1
+--
+-- By xmacex, Tom Whitwell's
+-- successful TM concept.
 
 DEBUG = true
 
@@ -43,9 +48,9 @@ function init()
 end
 
 function init_params()
-   params:add_number('bits', "bits", 1, 7, 7)
    params:add_control('p', "p", controlspec.new(0, 1.0,'lin', 0.01, 0.5))
    params:set_action('p', function(p) p_dial:set_value(p) end)
+   params:add_number('bits', "bits", 1, 7, 7)
    params:add_number('offset', "offset mask", 0, 6, 0)
 
    params:add_separator("MIDI output")
