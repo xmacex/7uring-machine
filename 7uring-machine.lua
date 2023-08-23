@@ -105,13 +105,15 @@ function tick()
          if register >= 2^params:get('bits') then register = 0 end
       end
 
-      -- Pulse
-      if output == 1 and pulse_high == 0 then -- Pulse came up
-         pulse_on()
-      elseif output == 0 and pulse_high == 1 then -- Pulse came down
-         pulse_off()
+      -- Pulse FIXME this is out of line as event-based, re-align with the other types.
+      if params:get('midi_type') == 2 then
+         if output == 1 and pulse_high == 0 then -- Pulse came up
+            pulse_on()
+         elseif output == 0 and pulse_high == 1 then -- Pulse came down
+            pulse_off()
+         end
+         pulse_high = output
       end
-      pulse_high = output
    end
 end
 
@@ -271,7 +273,6 @@ end
 
 function wiggle_cc()
    if midi_dev then
-      -- TODO: MIDI is 7 bit. Deal with it.
       local val = get_offset_register()
       midi_dev:cc(params:get('midi_cc'), val, params:get('midi_ch'))
    end
