@@ -50,14 +50,12 @@ function init_params()
    params:add_number('offset', "offset mask", 0, 6, 0)
 
    params:add_separator("MIDI output")
-   params:add_control('midi_cc', "cc", controlspec.MIDI) -- Want integers tho
    params:add_number('midi_dev', "dev", 1, 16, 1)
    params:set_action('midi_dev', function(d) midi_dev = midi.connect(d) end)
    params:add_number('midi_ch', "channel", 1, 16, 1)
    params:add_option('midi_type', "output", {"note", "pulse note", "cc"}, 1)
    params:add_control('note_len', "note length", controlspec.new(0.05, 1, 'lin', 0.01, 0.1, "sec"))
-   params:hide('midi_cc')
-   params:add_number('midi_cc', "cc", 1, 128, 71)
+   params:add_number('midi_cc', "cc", 1, 128, 71)  -- Would use controlspec.MIDI but it's not integers
    params:hide('midi_cc')
    params:set_action('midi_type', function(d)
                         if d == 1 then -- note
