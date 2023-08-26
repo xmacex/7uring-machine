@@ -16,8 +16,9 @@ stds.turingmachine = {
       "pulse_on",
       "pulse_off",
       "wiggle_cc",
+      "all_notes_off",
 
-      -- Utility functions
+      -- Utility function
       "numberToBinStr",
       "boolToNumber",
       "toBits",

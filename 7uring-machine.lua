@@ -58,6 +58,7 @@ function init_params()
    params:add_number('midi_cc', "cc", 1, 128, 71)  -- Would use controlspec.MIDI but it's not integers
    params:hide('midi_cc')
    params:set_action('midi_type', function(d)
+			all_notes_off(params:get('midi_ch'))
                         if d == 1 then -- note
                            params:hide('midi_cc')
                            params:show('note_len')
@@ -279,6 +280,16 @@ end
 -- End of output
 
 -- Utilities
+
+function all_notes_off(ch)
+   if midi_dev then
+      log("silencing "..midi_dev.name.." ch "..ch)
+      midi_dev:cc(123, 0, ch)
+      for n=0,127,1 do
+	 midi_dev:note_off(n, 0, ch)
+      end
+   end
+end
 
 function boolToNumber(value)
    return value and 1 or 0
