@@ -5,36 +5,40 @@ stds.turingmachine = {
       "log",
 
       -- Core functions
-      "init_params",
-      "tick",
-      "redraw",
+      "all_notes_off",
       "draw_controls",
       "draw_history",
       "draw_register",
-      "run_output",
+      "draw_offset",
+      "get_offset_register",
+      "init_params",
       "play_note",
-      "pulse_on",
       "pulse_off",
+      "pulse_on",
+      "redraw",
+      "run_output",
+      "start",
+      "stop",
+      "tick",
       "wiggle_cc",
-      "all_notes_off",
 
       -- Utility function
-      "numberToBinStr",
       "boolToNumber",
+      "numberToBinStr",
       "toBits",
 
       -- Global variables
       "HEIGHT",
       "WIDTH",
-      "values",
-      "register",
+      "midi_dev",
       "pulse_high",
       "pulse_note",
-      "midi_dev",
+      "register",
+      "values",
 
       -- Clocks and metros
-      "turing",
       "player",
+      "turing",
       "ui_metro"
    }
 }
@@ -42,7 +46,8 @@ stds.turingmachine = {
 stds.norns = {
    globals = {
       "init",
-      "enc"
+      "enc",
+      "key"
    },
    read_globals = {
       _menu = {
@@ -52,9 +57,16 @@ stds.norns = {
       },
       clock = {
          fields = {
+            "cancel",
             "run",
             "sleep",
-            "sync"
+            "sync",
+            transport = {
+               fields = {
+                  "start",
+                  "stop",
+               }
+            }
          }
       },
       controlspec = {
@@ -98,11 +110,15 @@ stds.norns = {
             "clear",
             "color",
             "fill",
+            "font_face",
             "level",
             "line",
+            "line_cap",
+            "line_width",
             "move",
+            "stroke",
+            "text",
             "update",
-            "stroke"
          }
       },
       ui = {
@@ -116,3 +132,7 @@ stds.norns = {
 }
 
 std = "lua51+norns+turingmachine"
+
+-- Local Variables:
+-- mode: lua
+-- End:

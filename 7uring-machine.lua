@@ -275,9 +275,9 @@ function play_note()
 end
 
 function pulse_on()
-   local pulse_note = get_offset_register()
-   midi_dev:note_on(pulse_note, 100, params:get('midi_ch'))
-   -- log("Pulse "..pulse_note.." on")
+   local note = get_offset_register()
+   midi_dev:note_on(note, 100, params:get('midi_ch'))
+   -- log("Pulse "..note.." on")
 end
 
 function pulse_off()
