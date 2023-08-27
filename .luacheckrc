@@ -89,6 +89,11 @@ stds.norns = {
             "note_off"
          }
       },
+      norns = {
+         fields = {
+            "is_shield"
+         }
+      },
       params = {
          fields = {
             "add_number",
