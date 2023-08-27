@@ -17,6 +17,8 @@ local HEIGHT = 64
 local values = {0,0}
 local TAB_WIDTH = WIDTH/8
 local register = 0
+local turing = nil
+local player = nil
 local pulse_high = 0
 local pulse_note = nil
 
@@ -30,8 +32,11 @@ local midi_dev = nil
 function init()
    init_params()
 
-   turing = clock.run(tick)
-   player = clock.run(run_output)
+   -- Hook to transport
+   clock.transport.start = start
+   clock.transport.stop = stop
+
+   start()
 
    -- TODO: what is a good norns pattern for UI update?
    clock.run(
@@ -224,6 +229,16 @@ function key(n, z)
       -- Set MSB as 1
       register = register|(1<<params:get('bits'))
    end
+end
+
+function start()
+   turing = clock.run(tick)
+   player = clock.run(run_output)
+end
+
+function stop()
+   clock.cancel(turing)
+   clock.cancel(player)
 end
 
 -- End of screen drawing
